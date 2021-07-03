@@ -1,0 +1,17 @@
+version: "3.7"
+
+services:
+
+ mysql:
+      container_name: mysql-images
+      image: mysql:5.7
+      ports:
+        - "3306:3306"
+      environment:
+        MYSQL_ROOT_PASSWORD: "secret"
+        MYSQL_DATABASE: "medical_manager"
+      volumes:
+          - persist:/var/lib/mysql
+
+volumes:
+    persist:
