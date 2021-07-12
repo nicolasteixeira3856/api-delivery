@@ -1,27 +1,35 @@
 {
-    "name": "API-DELIVERY",
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
-    "scripts": {
-        "start": "node -r dotenv/config index.js",
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "dev": "nodemon -r dotenv/config index.js"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "bcryptjs": "^2.4.3",
-        "dotenv-safe": "^8.2.0",
-        "express": "^4.17.1",
-        "flatted": "^3.1.1",
-        "jsonwebtoken": "^8.5.1",
-        "mysql2": "^2.2.5",
-        "sequelize": "^6.6.2",
-        "sequelize-cli": "^6.2.0"
-    },
-    "devDependencies": {
-        "nodemon": "^2.0.7"
-    }
+  "name": "api_delivery",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r dotenv/config index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon -r dotenv/config index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv-safe": "^8.2.0",
+    "express": "^4.17.1",
+    "flatted": "^3.1.1",
+    "jsonwebtoken": "^8.5.1",
+    "mysql2": "^2.2.5",
+    "sequelize": "^6.6.2",
+    "sequelize-cli": "^6.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nicolasteixeira3856/api-delivery.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nicolasteixeira3856/api-delivery/issues"
+  },
+  "homepage": "https://github.com/nicolasteixeira3856/api-delivery#readme"
 }

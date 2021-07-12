@@ -1,5 +1,6 @@
 const express = require("express");
 const associateRouter = require("./associateRouter");
+const clientsRouter = require("./clientRouter");
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -7,5 +8,6 @@ router.get("/", (req, res) => {
 });
 
 router.use("/associate", associateRouter);
+router.use("/clients",clientsRouter );
 
 module.exports = router;
