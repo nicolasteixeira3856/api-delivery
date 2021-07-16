@@ -69,7 +69,7 @@ module.exports = {
         if (associate) {
             res.status(200).json({ associate });
         } else {
-            res.status(404).json({ msg: "Não foi possível encontrar pacientes." });
+            res.status(404).json({ msg: "Não foi possível encontrar associados." });
         }
     },
 
