@@ -6,6 +6,6 @@ router.get("/", (req, res) => {
     res.status(200).json("Bem-vindo a API de Delivery");
 });
 
-router.use("/associate", associateRouter);
+router.use("/associates", associateRouter);
 
 module.exports = router;

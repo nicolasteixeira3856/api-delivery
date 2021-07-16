@@ -56,4 +56,113 @@ module.exports = {
         }
     },
 
+    async listAllAssociates(req, res) {
+        const associate = await Associate.findAll({
+            order: [
+                ["companyName", "ASC"]
+            ],
+        }).catch((exception) => {
+            console.log(exception);
+            res.status(500).json({ msg: "Falha na conexão." });
+        });
+
+        if (associate) {
+            res.status(200).json({ associate });
+        } else {
+            res.status(404).json({ msg: "Não foi possível encontrar pacientes." });
+        }
+    },
+
+    async listAssociateByCpnj(req, res) {
+        try {
+            const associateCnpj = req.params.cnpj;
+            if (!associateCnpj) {
+                res.status(400).json({ msg: "Associado não informado." });
+            }
+
+            const associate = await Associate.findOne({
+                where: { cnpj: associateCnpj },
+            });
+
+            if (associate) {
+                if (associate == "")
+                    res.status(404).json({ msg: "Não foi possível encontrar o associado." });
+                else
+                    res.status(200).json({ associate });
+            } else {
+                res.status(404).json({ msg: "Não foi possível encontrar o associado." });
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(404).json({ msg: "Não foi possível encontrar o associado." });
+        }
+    },
+
+    async updateAssociate(req, res) {
+        const associateId = req.body.id;
+        const associate = req.body;
+
+        if (!associateId) {
+            res.status(400).json({ msg: "ID do associado não foi informado." });
+        }
+
+        if (!associate.companyName || !/^\d+$/.test(associate.cnpj) || !associate.password) {
+            res.status(400).json({ msg: "Preencha todos os dados obrigatórios corretamente." });
+        } else {
+
+            const associateCnpjExists = await Associate.findOne({
+                where: { cnpj: associate.cnpj },
+            });
+
+            if (associateCnpjExists) {
+                if (associateCnpjExists.cnpj === associate.cnpj) {
+                    const associateExists = await Associate.findByPk(associateId);
+                    if (!associateExists) {
+                        res.status(404).json({ msg: "Associado não encontrado." });
+                    } else {
+                        if (associate.companyName || associate.cnpj || associate.password) {
+                            await Associate.update(associate, { where: { id: associateId }, });
+                            return res.status(200).json({ msg: "Associado editado com sucesso." });
+                        } else {
+                            res.status(400).json({ msg: "Dados obrigatórios não preenchidos." });
+                        }
+                    }
+                } else {
+                    res.status(500).json({ msg: "CNPJ duplicado, apenas um associado por CNPJ." });
+                }
+            } else {
+                const associateExists = await Associate.findByPk(associateId);
+                if (!associateExists) {
+                    res.status(404).json({ msg: "Associado não encontrado." });
+                } else {
+                    if (associate.companyName || associate.cnpj || associate.password) {
+                        await Associate.update(associate, { where: { id: associateId }, });
+                        return res.status(200).json({ msg: "Associado editado com sucesso." });
+                    } else {
+                        res.status(400).json({ msg: "Dados obrigatórios não preenchidos." });
+                    }
+                }
+            }
+        }
+    },
+
+    async deleteAssociate(req, res) {
+        let id = req.params.id
+
+        if (id === undefined || id === null) {
+            res.status(404).json({ msg: "ID do associado não foi informado." })
+        } else {
+            id = Number(id)
+            const associate = await Associate.destroy({
+                where: { id: id }
+            }).catch((error) => {
+                res.status(500).json({ msg: "Não foi possível excluir o associado!" })
+            })
+            if (associate != 0)
+                res.status(200).json({ msg: "Associado excluido com sucesso!" })
+            else
+                res.status(404).json({ msg: "Não foi possível excluir o associado!" })
+        }
+    },
+
 };
