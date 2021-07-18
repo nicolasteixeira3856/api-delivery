@@ -1,10 +1,10 @@
 const express = require("express");
 const clientsRouter = express.Router();
-const clientController = require("../controllers/clients");
+const clientController = require("../controllers/clientsController");
 
-clientsRouter.put("/:id", clientController.editClientById);
-clientsRouter.get("/find/:cnpj", clientController.listClientByCNPJ)
-clientsRouter.get("/list", clientController.listClients);
-clientsRouter.post("/", clientController.createClient)
+clientsRouter.put("/:id", clientController.EditClient);
+clientsRouter.get("/find/:cnpj", clientController.FindByCnpj)
+clientsRouter.get("/list", clientController.ReturnClients);
+clientsRouter.post("/", clientController.CreateClient);
 
 module.exports = clientsRouter;
