@@ -1,15 +1,12 @@
 const Delivery = require("../models/Delivery");
 const Client = require("../models/Client");
-const Mensage = require("../mensage/msg");
+
 const Courier = require("../models/Courier");
 const Sequelize = require("sequelize");
 
 
 const findId = async (id,type) => {
-    const people = await type.findByPk(id)
-    .catch(() => {
-        throw new Mensage("Erro para encontrar cliente no banco", 500)
-    });
+    const people = await type.findByPk(id);
     return people;
 }
 
@@ -18,16 +15,17 @@ module.exports = {
     async createDelivery(request, response){
         const { description, clientId, courierId, value } = request.body
         try {
-            if(!description){
-                throw new Mensage("Descrição nao pode ser nula", 400)
+            if(!description){             
+             response.status(404).json({ msg: "Descrição nao pode ser nula" });
             }
             const clientExists = await findId(clientId,Client);
             if(!clientExists){
-                response.status(404).json({ msg: clientExists });
+                response.status(400).json({ msg: clientExists });
             }
             const CourierExists = await findId(courierId,Courier);
             if(!CourierExists){
-                throw new Mensage("motoboy não existe", 400)
+                response.status(404).json({ msg: "motoboy não existe" });
+              
             }
              data = {
                 description,
@@ -38,12 +36,12 @@ module.exports = {
             };
                 const delivery = await Delivery.create(data).catch((err) => {
      
-                    throw new Mensage("Erro ao criar a entrega", 500);
+                    response.status(500).json({ msg: "Erro ao criar a entrega" });
                 })
             
 
             if(!delivery){
-                throw new Mensage("Entrega não criada", 404)
+                response.status(404).json({ msg: "Entrega não criada" });
             }
     
             return response.status(201).json({ delivery })
