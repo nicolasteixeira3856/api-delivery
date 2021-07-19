@@ -12,7 +12,7 @@ class Delivery extends Sequelize.Model {
     }
 
     static associate(models) {
-        this.belongsTo(models.Client, { foreignKey: "clientId" });
+        this.belongsTo(models.Client, { foreignKey: "clientId", onDelete: 'cascade', hooks:true});
         this.belongsTo(models.Courier, { foreignKey: "courierId" });
     }
 

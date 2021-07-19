@@ -170,7 +170,7 @@ async DeleteClient(req, response) {
     const deletedClient = await Client.destroy({
       where: { id: id },
     }).catch(async (error) => {
-      return res.status(403).json({ msg: error });
+      return response.status(403).json({ msg: error });
     });
     if (deletedClient != 0)
     response.status(200).json({ msg: "Cliente excluido com sucesso." });
