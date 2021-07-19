@@ -3,6 +3,7 @@ const Sequelize = require("sequelize");
 const Courier = require("../models/Courier");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { listPendingDeliveries } = require("./deliveryController");
 
 
 function generateToken(id) {
@@ -26,20 +27,6 @@ function generateToken(id) {
         return "OK";
 }
 
-const update = async (id, data) => {
-    const courierUpdated = await Courier.update(data, { where: { id: id }}).catch(() => {
-        throw new AppError("Erro ao dar update no motoboy", 500);
-    });
-    return courierUpdated;
-}
-
-const findId = async (id) => {
-    const courier = await Courier.findByPk(id)
-    .catch(() => {
-        throw new AppError("Erro para encontrar motoboy no banco", 500)
-    });
-    return courier
-}
 
 const findCPF = async (cpf) => {
     const courier = await Courier.findOne({
@@ -51,16 +38,6 @@ const findCPF = async (cpf) => {
     });
     return courier
 }
-
-const findAll = async () => {
-    const courier = await Courier.findAll({
-        order: [["name", "ASC"]],
-    }).catch(() => {
-        throw new AppError("Erro para encontrar todos os Motoboys no banco", 500);
-    });
-    return courier
-}
-
 
 module.exports = {
 
@@ -233,5 +210,79 @@ module.exports = {
             else
                 res.status(404).json({ msg: "Não foi possível excluir o motoboy!" })
         }
+    },
+
+    async listPendingDeliveriesForCourier(req, res) {
+        const courierId = req.id;
+        console.log(courierId)
+        if (!courierId)
+            res.status(400).json({
+                msg: "O Motoboy não existe.",
+            });
+        const courierExists = await Delivery.findAll({
+                where: {
+                    courierId: courierId,
+                    status: "pendente"
+                },
+                include: Courier
+            })
+            .catch((error) => res.status(500).json({ error }));
+        var myJsonString = JSON.stringify(courierExists);
+        const obj = JSON.parse(myJsonString)
+        
+        if (courierExists) {
+            if (courierExists == "")
+                res.status(404).json({ msg: "Não há entregas pendentes para este motoboy." });
+            else res.status(200).json({ obj });
+        } else res.status(404).json({ msg: "Não foi possível encontrar entregas." });
+    },
+
+    async listFinishedDeliveriesForCourier(req, res) {
+        const courierId = req.id;
+        console.log(courierId)
+        if (!courierId)
+            res.status(400).json({
+                msg: "O Motoboy não existe.",
+            });
+        const courierExists = await Delivery.findAll({
+                where: {
+                    courierId: courierId,
+                    status: "realizada"
+                },
+                include: Courier
+            })
+            .catch((error) => res.status(500).json({ error }));
+        var myJsonString = JSON.stringify(courierExists);
+        const obj = JSON.parse(myJsonString)
+        
+        if (courierExists) {
+            if (courierExists == "")
+                res.status(404).json({ msg: "Não há entregas finalizadas para este motoboy." });
+            else res.status(200).json({ obj });
+        } else res.status(404).json({ msg: "Não foi possível encontrar entregas." });
+    },
+
+    async listAllDeliveriesForCourier(req, res) {
+        const courierId = req.id;
+        console.log(courierId)
+        if (!courierId)
+            res.status(400).json({
+                msg: "O Motoboy não existe.",
+            });
+        const courierExists = await Delivery.findAll({
+                where: {
+                    courierId: courierId,
+                },
+                include: Courier
+            })
+            .catch((error) => res.status(500).json({ error }));
+        var myJsonString = JSON.stringify(courierExists);
+        const obj = JSON.parse(myJsonString)
+        
+        if (courierExists) {
+            if (courierExists == "")
+                res.status(404).json({ msg: "Não há entregas finalizadas para este motoboy." });
+            else res.status(200).json({ obj });
+        } else res.status(404).json({ msg: "Não foi possível encontrar entregas." });
     },
 }
