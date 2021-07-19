@@ -1,7 +1,6 @@
 const Client = require("../models/Client");
 const Sequelize = require("sequelize");
-//const Mensage = require("../mensage/msg");
-//const ClientRepository = require("./clients");
+
 
 
 const insert = async (data) => {
@@ -44,6 +43,7 @@ module.exports = {
             if(!/^\d+$/.test(cnpj) || !companyName || !address ){
                 return response.status(404).json({ message: "dados incorretos" })
             }
+            
              data = {
                 cnpj,
                 companyName,
@@ -52,7 +52,7 @@ module.exports = {
         const clientAlreadyExists = await findCNPJ(data.cnpj);
         
         if(clientAlreadyExists) {
-            return response.status(404).json({ message: "Cliente cadastrado" })
+            return response.status(404).json({ message: "Cliente já cadastrado" })
         }
     
         const client = await insert(data);
@@ -113,6 +113,12 @@ module.exports = {
             return response.status(404).json({ message: "Id informado não existe" })
           
         }
+        const clientCnpjExists = await findCNPJ(data.cnpj);
+        
+        if(clientCnpjExists) {
+            return response.status(404).json({ message: "Cliente já cadastrado" })
+        }
+    
 
         if (!data) {
             return response.status(404).json({ message: "Informações Inválidas" })
