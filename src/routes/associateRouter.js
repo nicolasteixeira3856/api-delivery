@@ -5,7 +5,7 @@ const auth = require("../middlewares/auth");
 
 associateRouter.post("/authentication", associateController.authentication);
 
-associateRouter.post("/newAssociate",auth, associateController.newAssociate);
+associateRouter.post("/newAssociate", associateController.newAssociate);
 associateRouter.get("/listAllAssociates", associateController.listAllAssociates);
 associateRouter.get("/listAssociateByCpnj/:cnpj",auth, associateController.listAssociateByCpnj);
 associateRouter.put("/updateAssociate",auth, associateController.updateAssociate);

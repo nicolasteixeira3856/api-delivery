@@ -141,7 +141,7 @@ module.exports = {
             res.status(400).json({ msg: "ID do associado não foi informado." });
         }
 
-        if (!associate.companyName || !/^\d+$/.test(associate.cnpj)) {
+        if (!associate.companyName || !/^\d+$/.test(associate.cnpj) || !associate.password) {
             res.status(400).json({ msg: "Preencha todos os dados obrigatórios corretamente." });
         } else {
 
@@ -155,7 +155,10 @@ module.exports = {
                     if (!associateExists) {
                         res.status(404).json({ msg: "Associado não encontrado." });
                     } else {
-                        if (associate.companyName || associate.cnpj) {
+                        if (associate.companyName || associate.cnpj || !associate.password) {
+                            const salt = bcrypt.genSaltSync(12);
+                            const hash = bcrypt.hashSync(associate.password, salt);
+                            associate.password = hash
                             await Associate.update(associate, { where: { id: associateId }, });
                             return res.status(200).json({ msg: "Associado editado com sucesso." });
                         } else {
@@ -170,7 +173,15 @@ module.exports = {
                 if (!associateExists) {
                     res.status(404).json({ msg: "Associado não encontrado." });
                 } else {
-                    if (associate.companyName || associate.cnpj) {
+                    if (associate.companyName || associate.cnpj || !associate.password) {
+                        const passwordValid = passwordValidation(associate.password);
+
+                        if (passwordValid !== "OK")
+                        return res.status(400).json({ msg: passwordValid });
+
+                        const salt = bcrypt.genSaltSync(12);
+                        const hash = bcrypt.hashSync(associate.password, salt);
+                        associate.password = hash
                         await Associate.update(associate, { where: { id: associateId }, });
                         return res.status(200).json({ msg: "Associado editado com sucesso." });
                     } else {
