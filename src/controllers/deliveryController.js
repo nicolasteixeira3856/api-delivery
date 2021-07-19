@@ -10,6 +10,11 @@ const findId = async (id,type) => {
     return people;
 }
 
+const update = async (id, data) => {
+    const clientUpdated = await Delivery.update(data, { where: { id:id}});
+    return clientUpdated;
+}
+
 module.exports = {
 
     async createDelivery(request, response){
@@ -94,4 +99,80 @@ module.exports = {
             res.status(404).json({ msg: "Não foi possível encontrar entregas realizadas." });
         }
     },
+    async EditPending(request, response){
+        const id = request.params.id;
+        const { description, clientId, courierId, value } = request.body
+        return response.status(400).json({ description, clientId, courierId, value  })
+        try {
+            const clientAlreadyExists = await findId(id);
+            if(!clientAlreadyExists) {
+                return response.status(400).json({ message: "Id informado não existe" })
+              
+            }
+            return response.status(400).json({ id })
+            data = {
+                description,
+                clientId,
+                courierId,
+                status: "pendente",
+                value              
+            };
+            return response.status(400).json({ data })
+            const clientUpdated =  await update(id, data);
+    
+            return response.status(201).json({ clientUpdated })
+    
+        } catch (err) {
+            return response.status(err.statusCode).json({ message: err.message })
+        }
+    
+    },
+
+    /*async EditPending(request, response){
+        const id = request.params.id;
+        const { description, clientId, courierId, value } = request.body
+        try {
+            if(!description){             
+                response.status(404).json({ msg: "Descrição nao pode ser nula" });
+               }
+               const clientExists = await findId(clientId,Client);
+               if(!clientExists){
+                   response.status(400).json({ msg: clientExists });
+               }
+               const CourierExists = await findId(courierId,Courier);
+               if(!CourierExists){
+                   response.status(404).json({ msg: "motoboy não existe" });
+                 
+               }
+                data = {
+                   description,
+                   clientId,
+                   courierId,
+                   status: "pendente",
+                   value              
+               }
+            const deliveryAlreadyExists = await findId(id);
+            if(!deliveryAlreadyExists) {
+                return response.status(404).json({ message: "Id informado não existe" })
+              
+            }
+            if(!deliveryAlreadyExists.status == "realizada") {
+                return response.status(400).json({ message: "Essa entrega ja foi realizada" })
+              
+            }
+    
+            if (!data) {
+                return response.status(404).json({ message: "Informações Inválidas" })
+                
+            }
+    
+            const delivery =  await update(id, data);
+    
+            return response.status(201).json({ delivery })
+    
+        } catch (err) {
+            return response.status(err.statusCode).json({ message: err.message })
+        }
+    
+    }*/
 };

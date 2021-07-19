@@ -1,7 +1,6 @@
 const Associate = require("../models/Associate");
 const Sequelize = require("sequelize");
 const bcrypt = require("bcryptjs");
-const Mensage = require("../mensage/msg");
 
 function passwordValidation(password) {
     if (password.length < 8)
@@ -20,10 +19,7 @@ const findCnpj = async (cnpj) => {
         where: {
             cnpj
         }
-    }).catch(() => {
-        throw new AppError("Erro para encontrar o associado pelo CNPJ", 500);
     });
-    console.log("associate", associate)
     return associate
 }
 
