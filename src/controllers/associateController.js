@@ -11,15 +11,15 @@ function generateToken(id) {
     return token;
   }
 
-function passwordValidation(password) {
+  function passwordValidation(password) {
     if (password.length < 8)
         return "Senha deve ter no mínimo 8 caracteres.";
     else if (!password.match(/[a-zA-Z]/g))
         return "Senha deve ter no mínimo uma letra.";
     else if (!password.match(/[0-9]+/))
         return "Senha deve ter no mínimo um número.";
-    //else if (!password.match((/?=(?:.*?[!@#$%*()_+^&}{:;?.]){1})(?!.*\s)[0-9a-zA-Z!@#;$%*(){}_+^&]/)))
-    //return "Senha deve ter no mínimo um caracter especial.";
+    else if (!password.match(/[!@#$%^&*?]/))
+    return "Senha deve ter no mínimo um caracter especial.";
     else
         return "OK";
 }
