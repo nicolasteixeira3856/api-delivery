@@ -23,14 +23,7 @@ function generateToken(id) {
     else
         return "OK";
 }
-const findCnpj = async (cnpj) => {
-    const associate = await Associate.findOne({
-        where: {
-            cnpj
-        }
-    });
-    return associate
-}
+
 
 module.exports = {
 

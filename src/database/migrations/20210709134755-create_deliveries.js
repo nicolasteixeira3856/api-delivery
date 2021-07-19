@@ -16,12 +16,13 @@ module.exports = {
             clientId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                references: { model: "Clients", key: "id" }
+                references: { model: "Clients", key: "id" },
+                onDelete: "CASCADE",
             },
             courierId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                references: { model: "Couriers", key: "id" }
+                references: { model: "Couriers", key: "id" },
             },
             status: {
                 type: Sequelize.STRING,
