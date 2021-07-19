@@ -15,14 +15,14 @@ module.exports = {
                     clientId: 2,
                     courierId: 2,
                     status: "realizada",
-                    value: "100,50",
+                    value: "100.50",
                 },
                 {
                     description: "Nvidia RTX 3070 Ti",
                     clientId: 3,
                     courierId: 3,
                     status: "pendente",
-                    value: "200,50",
+                    value: "200.50",
                 }
             ], {}
         );

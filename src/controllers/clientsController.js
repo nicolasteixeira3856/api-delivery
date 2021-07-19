@@ -1,20 +1,20 @@
 const Client = require("../models/Client");
 const Sequelize = require("sequelize");
-const AppError = require("../errors/AppError");
+const Mensage = require("../mensage/msg");
 //const ClientRepository = require("./clients");
 
 
 const insert = async (data) => {
     const client = await Client.create(data).catch((err) => {
         console.log(err)
-        throw new AppError("Erro ao inserir o cliente no sistema", 500);
+        throw new Mensage("Erro ao inserir o cliente no sistema", 500);
     })
     return client
 } 
 
 const update = async (id, data) => {
     const clientUpdated = await Client.update(data, { where: { id: id }}).catch(() => {
-        throw new AppError("Erro ao dar update no cliente", 500);
+        throw new Mensage("Erro ao dar update no cliente", 500);
     });
     return clientUpdated;
 }
@@ -22,7 +22,7 @@ const update = async (id, data) => {
 const findId = async (id) => {
     const client = await Client.findByPk(id)
     .catch(() => {
-        throw new AppError("Erro para encontrar cliente no banco", 500)
+        throw new Mensage("Erro para encontrar cliente no banco", 500)
     });
     return client
 }
@@ -33,7 +33,7 @@ const findCNPJ = async (cnpj) => {
             cnpj
         }
     }).catch(() => {
-        throw new AppError("Erro para encontrar o cliente pelo CNPJ", 500);
+        throw new Mensage("Erro para encontrar o cliente pelo CNPJ", 500);
     });
     return client
 }
@@ -42,7 +42,7 @@ const findAll = async () => {
     const clients = await Client.findAll({
         order: [["companyName", "ASC"]],
     }).catch(() => {
-        throw new AppError("Erro para encontrar todos os clientes no banco", 500);
+        throw new Mensage("Erro para encontrar todos os clientes no banco", 500);
     });
     return clients
 }
@@ -54,7 +54,7 @@ module.exports = {
         try {
             
             if(!/^\d+$/.test(cnpj) || !companyName || !address ){
-                throw new AppError("Campos incorretos", 404)
+                throw new Mensage("Campos incorretos", 404)
             }
              data = {
                 cnpj,
@@ -64,12 +64,12 @@ module.exports = {
         const clientAlreadyExists = await findCNPJ(data.cnpj);
         
         if(clientAlreadyExists) {
-            throw new AppError("Client já existe", 404)
+            throw new Mensage("Client já existe", 404)
         }
     
         const client = await insert(data);
             if(!client){
-                throw new AppError("Não foi possivel criar o cliente", 404)
+                throw new Mensage("Não foi possivel criar o cliente", 404)
             }
     
             return response.status(201).json({ client })
@@ -85,12 +85,12 @@ module.exports = {
         try {
             
             if(!cnpj){
-                throw new AppError("cnpj não informado", 404)
+                throw new Mensage("cnpj não informado", 404)
             }
     
             const client = await findCNPJ(cnpj);
             if(!client){
-                throw new AppError("Client não encontrado", 404)
+                throw new Mensage("Client não encontrado", 404)
             }
     
             return response.status(201).json({ client })
@@ -119,11 +119,11 @@ module.exports = {
     try {
         const clientAlreadyExists = await findId(id);
         if(!clientAlreadyExists) {
-            throw new AppError("Id informado não existe", 404);
+            throw new Mensage("Id informado não existe", 404);
         }
 
         if (!data) {
-            throw new AppError("Informações Inválidas", 404)
+            throw new Mensage("Informações Inválidas", 404)
         }
 
         const clientUpdated =  await update(id, data);
@@ -134,7 +134,18 @@ module.exports = {
         return response.status(err.statusCode).json({ message: err.message })
     }
 
-}
+},
+async DeleteClient(req, res) {
+    const id = req.params.id;
+    const deletedClient = await Client.destroy({
+      where: { id: id },
+    }).catch(async (error) => {
+      return res.status(403).json({ msg: error });
+    });
+    if (deletedClient != 0)
+      res.status(200).json({ msg: "Cliente excluido com sucesso." });
+    else res.status(404).json({ msg: "Cliente não encontrado." });
+  }
 
 }
 

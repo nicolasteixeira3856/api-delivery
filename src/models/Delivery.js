@@ -5,7 +5,7 @@ class Delivery extends Sequelize.Model {
         super.init({
             description: Sequelize.STRING,
             status: Sequelize.STRING,
-            value: Sequelize.STRING,
+            value: Sequelize.FLOAT,
         }, {
             sequelize,
         });
