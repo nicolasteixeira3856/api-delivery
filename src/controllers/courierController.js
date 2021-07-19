@@ -2,16 +2,16 @@ const Delivery = require("../models/Delivery");
 const Sequelize = require("sequelize");
 const Courier = require("../models/Courier");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 
-
-  const insert = async (data) => {
-    const courier = await Courier.create(data).catch((err) => {
-        console.log(err)
-        throw new AppError("Erro ao inserir o motoboy no sistema", 500);
-    })
-    return courier
-}
+function generateToken(id) {
+    process.env.JWT_SECRET = Math.random().toString(36).slice(-20);
+    const token = jwt.sign({ id }, process.env.JWT_SECRET, {
+      expiresIn: 18000, // Token expira em 5 horas
+    });
+    return token;
+  }
 
 function passwordValidation(password) {
     if (password.length < 8)
@@ -63,6 +63,32 @@ const findAll = async () => {
 
 
 module.exports = {
+
+    async authentication(req, res) {
+		const cpf = req.body.cpf;
+		const password = req.body.password;
+		if (!cpf || !password)
+			return res.status(400).json({ msg: "Campos obrigatórios vazios!" });
+		try {
+			const courier  = await Courier.findOne({
+				where: { cpf },
+			});
+			if (!courier )
+				return res.status(404).json({ msg: "Usuário ou senha inválidos." });
+			else {
+				if (bcrypt.compareSync(password, courier.password)) {
+					const token = generateToken(courier.id);
+					return res
+						.status(200)
+						.json({ msg: "Autenticado com sucesso", token });
+				} else
+					return res.status(404).json({ msg: "Usuário ou senha inválidos." });
+			}
+		} catch (error) {
+			res.status(500).json(error);
+		}
+	},
+
     async newCourier(req, res) {
         try {
             const { name, cpf, password, telephone } = req.body;
@@ -150,7 +176,7 @@ module.exports = {
             res.status(400).json({ msg: "ID do motoboy não foi informado." });
         }
 
-        if (!courier.name || !/^\d+$/.test(courier.cpf) || !courier.password || !courier.telephone) {
+        if (!courier.name || !/^\d+$/.test(courier.cpf) || !courier.telephone) {
             res.status(400).json({ msg: "Preencha todos os dados obrigatórios corretamente." });
         } else {
 
@@ -164,7 +190,7 @@ module.exports = {
                     if (!courierExists) {
                         res.status(404).json({ msg: "Motoboy não encontrado." });
                     } else {
-                        if (courier.name || courier.cpf || courier.password || courier.telephone) {
+                        if (courier.name || courier.cpf ||  courier.telephone) {
                             await Courier.update(courier, { where: { id: courierId }, });
                             return res.status(200).json({ msg: "Motoboy editado com sucesso." });
                         } else {
