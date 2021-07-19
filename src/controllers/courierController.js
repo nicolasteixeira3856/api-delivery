@@ -281,7 +281,7 @@ module.exports = {
         
         if (courierExists) {
             if (courierExists == "")
-                res.status(404).json({ msg: "Não há entregas finalizadas para este motoboy." });
+                res.status(404).json({ msg: "Não há entregas para este motoboy." });
             else res.status(200).json({ obj });
         } else res.status(404).json({ msg: "Não foi possível encontrar entregas." });
     },

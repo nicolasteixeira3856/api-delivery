@@ -101,10 +101,10 @@ module.exports = {
     },
     async EditPending(request, response){
         const id = request.params.id;
-        const { description, clientId, courierId, value } = request.body
+        const { description, clientId, courierId, value, status } = request.body
         try {
             const deliveryAlreadyExists = await findId(id,Delivery);
-      
+            console.log(newcourierId)
             if(!deliveryAlreadyExists) {
                 return response.status(400).json({ message: "Id informado não existe" })
               
@@ -117,15 +117,18 @@ module.exports = {
                    response.status(400).json({ msg: "cliente não existe" });
                }
                const CourierExists = await findId(courierId,Courier);
+               
                if(!CourierExists){
                    response.status(404).json({ msg: "motoboy não existe" });
-                 
+               }
+               if (status != "realizada"){
+                response.status(404).json({ msg: "Status não existente" });
                }
             data = {
                 description,
                 clientId,
                 courierId,
-                status: deliveryAlreadyExists.status,
+                status,
                 value              
             };
             const deliveryUpdated =  await update(id, data);
