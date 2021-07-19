@@ -2,44 +2,31 @@ const Delivery = require("../models/Delivery");
 const Sequelize = require("sequelize");
 const Courier = require("../models/Courier");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { listPendingDeliveries } = require("./deliveryController");
 
 
+function generateToken(id) {
+    process.env.JWT_SECRET = Math.random().toString(36).slice(-20);
+    const token = jwt.sign({ id }, process.env.JWT_SECRET, {
+      expiresIn: 18000, // Token expira em 5 horas
+    });
+    return token;
+  }
 
-  const insert = async (data) => {
-    const courier = await Courier.create(data).catch((err) => {
-        console.log(err)
-        throw new AppError("Erro ao inserir o motoboy no sistema", 500);
-    })
-    return courier
-}
-
-function passwordValidation(password) {
+  function passwordValidation(password) {
     if (password.length < 8)
         return "Senha deve ter no mínimo 8 caracteres.";
     else if (!password.match(/[a-zA-Z]/g))
         return "Senha deve ter no mínimo uma letra.";
     else if (!password.match(/[0-9]+/))
         return "Senha deve ter no mínimo um número.";
-    //else if (!password.match((/?=(?:.*?[!@#$%*()_+^&}{:;?.]){1})(?!.*\s)[0-9a-zA-Z!@#;$%*(){}_+^&]/)))
-    //return "Senha deve ter no mínimo um caracter especial.";
+    else if (!password.match(/[!@#$%^&*?]/))
+    return "Senha deve ter no mínimo um caracter especial.";
     else
         return "OK";
 }
 
-const update = async (id, data) => {
-    const courierUpdated = await Courier.update(data, { where: { id: id }}).catch(() => {
-        throw new AppError("Erro ao dar update no motoboy", 500);
-    });
-    return courierUpdated;
-}
-
-const findId = async (id) => {
-    const courier = await Courier.findByPk(id)
-    .catch(() => {
-        throw new AppError("Erro para encontrar motoboy no banco", 500)
-    });
-    return courier
-}
 
 const findCPF = async (cpf) => {
     const courier = await Courier.findOne({
@@ -52,17 +39,33 @@ const findCPF = async (cpf) => {
     return courier
 }
 
-const findAll = async () => {
-    const courier = await Courier.findAll({
-        order: [["name", "ASC"]],
-    }).catch(() => {
-        throw new AppError("Erro para encontrar todos os Motoboys no banco", 500);
-    });
-    return courier
-}
-
-
 module.exports = {
+
+    async authentication(req, res) {
+		const cpf = req.body.cpf;
+		const password = req.body.password;
+		if (!cpf || !password)
+			return res.status(400).json({ msg: "Campos obrigatórios vazios!" });
+		try {
+			const courier  = await Courier.findOne({
+				where: { cpf },
+			});
+			if (!courier )
+				return res.status(404).json({ msg: "Usuário ou senha inválidos." });
+			else {
+				if (bcrypt.compareSync(password, courier.password)) {
+					const token = generateToken(courier.id);
+					return res
+						.status(200)
+						.json({ msg: "Autenticado com sucesso", token });
+				} else
+					return res.status(404).json({ msg: "Usuário ou senha inválidos." });
+			}
+		} catch (error) {
+			res.status(500).json(error);
+		}
+	},
+
     async newCourier(req, res) {
         try {
             const { name, cpf, password, telephone } = req.body;
@@ -150,7 +153,7 @@ module.exports = {
             res.status(400).json({ msg: "ID do motoboy não foi informado." });
         }
 
-        if (!courier.name || !/^\d+$/.test(courier.cpf) || !courier.password || !courier.telephone) {
+        if (!courier.name || !/^\d+$/.test(courier.cpf) || !courier.telephone) {
             res.status(400).json({ msg: "Preencha todos os dados obrigatórios corretamente." });
         } else {
 
@@ -164,7 +167,7 @@ module.exports = {
                     if (!courierExists) {
                         res.status(404).json({ msg: "Motoboy não encontrado." });
                     } else {
-                        if (courier.name || courier.cpf || courier.password || courier.telephone) {
+                        if (courier.name || courier.cpf ||  courier.telephone) {
                             await Courier.update(courier, { where: { id: courierId }, });
                             return res.status(200).json({ msg: "Motoboy editado com sucesso." });
                         } else {
@@ -207,5 +210,79 @@ module.exports = {
             else
                 res.status(404).json({ msg: "Não foi possível excluir o motoboy!" })
         }
+    },
+
+    async listPendingDeliveriesForCourier(req, res) {
+        const courierId = req.id;
+        console.log(courierId)
+        if (!courierId)
+            res.status(400).json({
+                msg: "O Motoboy não existe.",
+            });
+        const courierExists = await Delivery.findAll({
+                where: {
+                    courierId: courierId,
+                    status: "pendente"
+                },
+                include: Courier
+            })
+            .catch((error) => res.status(500).json({ error }));
+        var myJsonString = JSON.stringify(courierExists);
+        const obj = JSON.parse(myJsonString)
+        
+        if (courierExists) {
+            if (courierExists == "")
+                res.status(404).json({ msg: "Não há entregas pendentes para este motoboy." });
+            else res.status(200).json({ obj });
+        } else res.status(404).json({ msg: "Não foi possível encontrar entregas." });
+    },
+
+    async listFinishedDeliveriesForCourier(req, res) {
+        const courierId = req.id;
+        console.log(courierId)
+        if (!courierId)
+            res.status(400).json({
+                msg: "O Motoboy não existe.",
+            });
+        const courierExists = await Delivery.findAll({
+                where: {
+                    courierId: courierId,
+                    status: "realizada"
+                },
+                include: Courier
+            })
+            .catch((error) => res.status(500).json({ error }));
+        var myJsonString = JSON.stringify(courierExists);
+        const obj = JSON.parse(myJsonString)
+        
+        if (courierExists) {
+            if (courierExists == "")
+                res.status(404).json({ msg: "Não há entregas finalizadas para este motoboy." });
+            else res.status(200).json({ obj });
+        } else res.status(404).json({ msg: "Não foi possível encontrar entregas." });
+    },
+
+    async listAllDeliveriesForCourier(req, res) {
+        const courierId = req.id;
+        console.log(courierId)
+        if (!courierId)
+            res.status(400).json({
+                msg: "O Motoboy não existe.",
+            });
+        const courierExists = await Delivery.findAll({
+                where: {
+                    courierId: courierId,
+                },
+                include: Courier
+            })
+            .catch((error) => res.status(500).json({ error }));
+        var myJsonString = JSON.stringify(courierExists);
+        const obj = JSON.parse(myJsonString)
+        
+        if (courierExists) {
+            if (courierExists == "")
+                res.status(404).json({ msg: "Não há entregas finalizadas para este motoboy." });
+            else res.status(200).json({ obj });
+        } else res.status(404).json({ msg: "Não foi possível encontrar entregas." });
     },
 }

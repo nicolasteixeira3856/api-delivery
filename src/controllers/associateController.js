@@ -1,16 +1,25 @@
 const Associate = require("../models/Associate");
 const Sequelize = require("sequelize");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-function passwordValidation(password) {
+function generateToken(id) {
+    process.env.JWT_SECRET = Math.random().toString(36).slice(-20);
+    const token = jwt.sign({ id }, process.env.JWT_SECRET, {
+      expiresIn: 18000, // Token expira em 5 horas
+    });
+    return token;
+  }
+
+  function passwordValidation(password) {
     if (password.length < 8)
         return "Senha deve ter no mínimo 8 caracteres.";
     else if (!password.match(/[a-zA-Z]/g))
         return "Senha deve ter no mínimo uma letra.";
     else if (!password.match(/[0-9]+/))
         return "Senha deve ter no mínimo um número.";
-    //else if (!password.match((/?=(?:.*?[!@#$%*()_+^&}{:;?.]){1})(?!.*\s)[0-9a-zA-Z!@#;$%*(){}_+^&]/)))
-    //return "Senha deve ter no mínimo um caracter especial.";
+    else if (!password.match(/[!@#$%^&*?]/))
+    return "Senha deve ter no mínimo um caracter especial.";
     else
         return "OK";
 }
@@ -24,6 +33,32 @@ const findCnpj = async (cnpj) => {
 }
 
 module.exports = {
+
+    async authentication(req, res) {
+		const cnpj = req.body.cnpj;
+		const password = req.body.password;
+		if (!cnpj || !password)
+			return res.status(400).json({ msg: "Campos obrigatórios vazios!" });
+		try {
+			const associate  = await Associate.findOne({
+				where: { cnpj },
+			});
+			if (!associate )
+				return res.status(404).json({ msg: "Usuário ou senha inválidos." });
+			else {
+				if (bcrypt.compareSync(password, associate.password)) {
+					const token = generateToken(associate.id);
+					return res
+						.status(200)
+						.json({ msg: "Autenticado com sucesso", token });
+				} else
+					return res.status(404).json({ msg: "Usuário ou senha inválidos." });
+			}
+		} catch (error) {
+			res.status(500).json(error);
+		}
+	},
+
     async newAssociate(req, res) {
         try {
             const { companyName, cnpj, password, address } = req.body;
@@ -128,7 +163,10 @@ module.exports = {
                     if (!associateExists) {
                         res.status(404).json({ msg: "Associado não encontrado." });
                     } else {
-                        if (associate.companyName || associate.cnpj || associate.password) {
+                        if (associate.companyName || associate.cnpj || !associate.password) {
+                            const salt = bcrypt.genSaltSync(12);
+                            const hash = bcrypt.hashSync(associate.password, salt);
+                            associate.password = hash
                             await Associate.update(associate, { where: { id: associateId }, });
                             return res.status(200).json({ msg: "Associado editado com sucesso." });
                         } else {
@@ -143,7 +181,15 @@ module.exports = {
                 if (!associateExists) {
                     res.status(404).json({ msg: "Associado não encontrado." });
                 } else {
-                    if (associate.companyName || associate.cnpj || associate.password) {
+                    if (associate.companyName || associate.cnpj || !associate.password) {
+                        const passwordValid = passwordValidation(associate.password);
+
+                        if (passwordValid !== "OK")
+                        return res.status(400).json({ msg: passwordValid });
+
+                        const salt = bcrypt.genSaltSync(12);
+                        const hash = bcrypt.hashSync(associate.password, salt);
+                        associate.password = hash
                         await Associate.update(associate, { where: { id: associateId }, });
                         return res.status(200).json({ msg: "Associado editado com sucesso." });
                     } else {
