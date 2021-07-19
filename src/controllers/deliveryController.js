@@ -11,7 +11,7 @@ const findId = async (id,type) => {
 }
 
 const update = async (id, data) => {
-    const clientUpdated = await Delivery.update(data, { where: { id:id}});
+    const clientUpdated = await Delivery.update(data, { where: { id:id, status:"pendente"}});
     return clientUpdated;
 }
 
@@ -102,77 +102,51 @@ module.exports = {
     async EditPending(request, response){
         const id = request.params.id;
         const { description, clientId, courierId, value } = request.body
-        return response.status(400).json({ description, clientId, courierId, value  })
         try {
-            const clientAlreadyExists = await findId(id);
-            if(!clientAlreadyExists) {
+            const deliveryAlreadyExists = await findId(id,Delivery);
+      
+            if(!deliveryAlreadyExists) {
                 return response.status(400).json({ message: "Id informado não existe" })
               
             }
-            return response.status(400).json({ id })
-            data = {
-                description,
-                clientId,
-                courierId,
-                status: "pendente",
-                value              
-            };
-            return response.status(400).json({ data })
-            const clientUpdated =  await update(id, data);
-    
-            return response.status(201).json({ clientUpdated })
-    
-        } catch (err) {
-            return response.status(err.statusCode).json({ message: err.message })
-        }
-    
-    },
-
-    /*async EditPending(request, response){
-        const id = request.params.id;
-        const { description, clientId, courierId, value } = request.body
-        try {
             if(!description){             
                 response.status(404).json({ msg: "Descrição nao pode ser nula" });
                }
                const clientExists = await findId(clientId,Client);
                if(!clientExists){
-                   response.status(400).json({ msg: clientExists });
+                   response.status(400).json({ msg: "cliente não existe" });
                }
                const CourierExists = await findId(courierId,Courier);
                if(!CourierExists){
                    response.status(404).json({ msg: "motoboy não existe" });
                  
                }
-                data = {
-                   description,
-                   clientId,
-                   courierId,
-                   status: "pendente",
-                   value              
-               }
-            const deliveryAlreadyExists = await findId(id);
-            if(!deliveryAlreadyExists) {
-                return response.status(404).json({ message: "Id informado não existe" })
-              
-            }
-            if(!deliveryAlreadyExists.status == "realizada") {
-                return response.status(400).json({ message: "Essa entrega ja foi realizada" })
-              
-            }
+            data = {
+                description,
+                clientId,
+                courierId,
+                status: deliveryAlreadyExists.status,
+                value              
+            };
+            const deliveryUpdated =  await update(id, data);
     
-            if (!data) {
-                return response.status(404).json({ message: "Informações Inválidas" })
-                
-            }
-    
-            const delivery =  await update(id, data);
-    
-            return response.status(201).json({ delivery })
+            return response.status(201).json({ deliveryUpdated })
     
         } catch (err) {
             return response.status(err.statusCode).json({ message: err.message })
         }
     
-    }*/
+    },
+    async DeletePending(req, response) {
+        const id = req.params.id;
+        const deletedDelivery = await Delivery.destroy({
+          where: { id: id },
+        }).catch(async (error) => {
+          return res.status(403).json({ msg: error });
+        });
+        if (deletedDelivery != 0)
+        response.status(200).json({ msg: "entrega excluido com sucesso." });
+        else response.status(404).json({ msg: "entrega não encontrado." });
+      }
+
 };
